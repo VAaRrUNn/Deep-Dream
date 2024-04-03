@@ -27,13 +27,6 @@ def grad_loss(img, gradLayer,  beta=1, device='cpu'):
     return grad_loss
 
 
-unit_idx = 11  # the neuron to visualize
-act_wt = 0.5  # factor by which to weigh the activation relative to the regulizer terms
-upscaling_steps = 50  # no. of times to upscale
-upscaling_factor = 1.05
-optim_steps = 30  # no. of times to optimize an input image before upscaling
-
-
 def dream(model,
           image,
           activation,
