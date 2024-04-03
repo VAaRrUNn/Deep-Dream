@@ -1,0 +1,14 @@
+hyperparameters:
+  neuron_index: 11
+  act_weight: 0.5
+  upscaling_factor: 1.5
+  optimization_steps: 30
+
+device: cpu
+
+image_dim:
+  height: 28
+  width: 28
+
+path:
+  temp_image_path : temp_images
