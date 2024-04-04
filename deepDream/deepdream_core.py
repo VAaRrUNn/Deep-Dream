@@ -122,12 +122,10 @@ def main(image=None, device=None, video=None, config_name="default"):
             image = img_tensor.detach().clone()
             image.requires_grad_(True)
 
-        # change this
-        if device == None:
-            try:
-                device = "cuda" if torch.cuda.is_available() else "cpu"
-            except Exception as e:
-                device = cfg.device
+        try:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        except Exception as e:
+            device = cfg.device
 
         print(f"Running on device {device}")
         model.to(device)

@@ -61,7 +61,7 @@ def convert_to_video(images_path,
     
     print(f"Converting images to video")
 
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(output_path, fourcc, fps, final_resolution)
 
     resolutions = [(initial_resolution[0] + (final_resolution[0] - initial_resolution[0]) * i // steps,
