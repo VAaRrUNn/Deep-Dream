@@ -10,7 +10,7 @@ from deepDream.gradients import RGBgradients
 from deepDream.helpers import image_converter, normalize, denormalize, save_image, convert_to_video
 
 
-def create_hook(name):
+def create_hook(name, activation):
     def hook(module, inp, out):
         activation[name] = out
     return hook
@@ -66,6 +66,7 @@ def dream(model,
                 sys.exit()
 
             loss = -act_wt*rms + pxl_inty + im_grd
+            
             # print activation at the beginning of each mag_epoch
             if opt_epoch == 0:
                 print('begin mag_epoch {}, activation: {}'.format(mag_epoch, rms))
@@ -78,8 +79,8 @@ def dream(model,
 
             # saving the image in a temperory folder
             save_image(image_array=img,
-                    image_name=image_name,
-                    image_path=image_save_path)
+                       image_name=image_name,
+                       image_path=image_save_path)
 
         img = cv2.resize(img, dsize=(0, 0),
                          fx=upscaling_factor, fy=upscaling_factor).transpose(2, 0, 1)  # scale up and move the batch axis to be the first
@@ -87,8 +88,8 @@ def dream(model,
             device).requires_grad_(True)
 
 
-def main(image=None, device=None):
-    @hydra.main(version_base=None, config_path="../conf", config_name="config")
+def main(image=None, device=None, video=None, config_name = "default"):
+    @hydra.main(version_base=None, config_path="../conf", config_name=config_name)
     def _main(cfg):
         activation = {}
         model = models.googlenet(pretrained=True)
@@ -96,7 +97,7 @@ def main(image=None, device=None):
             param.requires_grad_(False)
 
         # choosing inception4e by default
-        model.inception4e.register_forward_hook(create_hook('4a'))
+        model.inception4e.register_forward_hook(create_hook('4a', activation))
         filter_x = np.array([[-3, 0, 3],
                             [-10, 0, 10],
                             [-3, 0, 3]])
@@ -131,11 +132,12 @@ def main(image=None, device=None):
               image_save_path=cfg.path.temp_image_path)
 
         # converting images to videos
-        convert_to_video(images_path=cfg.path.temp_image_path,
-                         output_path='output.mp4',
-                         ext="png",
-                         width=cfg.image_dim.height,
-                         height=cfg.image_dim.width)
+        if video:
+            convert_to_video(images_path=cfg.path.temp_image_path,
+                             output_path='output.mp4',
+                             ext="png",
+                             width=cfg.image_dim.height,
+                             height=cfg.image_dim.width)
 
     _main()
 
