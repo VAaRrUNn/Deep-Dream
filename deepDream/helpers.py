@@ -45,7 +45,8 @@ def convert_to_video(images_path,
                      width=28,
                      height=28,
                      repeat_frames = 10):
-
+    
+    print(f"Converting images to video")
     images = []
     for f in os.listdir(images_path):
         if f.endswith(ext):

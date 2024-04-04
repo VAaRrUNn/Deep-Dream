@@ -50,14 +50,14 @@ def dream(model,
             rms = torch.pow((layer_out[0, neuron_index]**2).mean(), 0.5)
             # terminate if rms is nan
             if torch.isnan(rms):
-                print('Error: rms was Nan; Terminating ...')
+                print('rms is nan, exiting')
                 sys.exit()
 
             # pixel intensity
             pxl_inty = torch.pow((image**2).mean(), 0.5)
             # terminate if pxl_inty is nan
             if torch.isnan(pxl_inty):
-                print('Error: Pixel Intensity was Nan; Terminating ...')
+                print('pixel intensity is nan, exiting')
                 sys.exit()
 
             # image gradients
@@ -65,14 +65,12 @@ def dream(model,
                                beta=1, device=device)
             # terminate is im_grd is nan
             if torch.isnan(im_grd):
-                print('Error: image gradients were Nan; Terminating ...')
+                print('image gradients are nan, exiting')
                 sys.exit()
 
             loss = -act_wt*rms + pxl_inty + im_grd
 
             # print activation at the beginning of each mag_epoch
-            if opt_epoch == 0:
-                print('begin mag_epoch {}, activation: {}'.format(mag_epoch, rms))
             loss.backward()
             optimizer.step()
 
@@ -84,7 +82,8 @@ def dream(model,
             save_image(image_array=img,
                        image_name=image_name,
                        image_path=image_save_path)
-
+            
+        print(f"Done: {mag_epoch}/{upscaling_steps}")
         img = cv2.resize(img, dsize=(0, 0),
                          fx=upscaling_factor, fy=upscaling_factor).transpose(2, 0, 1)  # scale up and move the batch axis to be the first
         image = normalize(torch.from_numpy(img)).to(
@@ -125,8 +124,8 @@ def main(image=None, device=None, video=None, config_name="default"):
                 device = "cuda" if torch.cuda.is_available() else "cpu"
             except Exception as e:
                 device = cfg.device
-                print(f"Defaulting device to {device}")
-
+                
+        print(f"Running on device {device}")
         model.to(device)
 
         dream(model=model,
