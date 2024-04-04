@@ -7,7 +7,7 @@ import cv2
 import hydra
 
 from deepDream.gradients import RGBgradients
-from deepDream.helpers import image_converter, normalize, denormalize, save_image, convert_to_video
+from deepDream.helpers import image_converter, normalize, denormalize, save_image, convert_to_video, get_resolution
 
 
 def create_hook(name, activation):
@@ -40,8 +40,10 @@ def dream(model,
           neuron_index=11):
     model.eval()
     image_index = 0
+    final_resolution = ()
     for mag_epoch in range(upscaling_steps+1):
         optimizer = torch.optim.Adam(params=[image], lr=0.4)
+        image = image.to(device)
 
         for opt_epoch in range(optim_steps):
             optimizer.zero_grad()
@@ -82,12 +84,14 @@ def dream(model,
             save_image(image_array=img,
                        image_name=image_name,
                        image_path=image_save_path)
-            
+
         print(f"Done: {mag_epoch}/{upscaling_steps}")
         img = cv2.resize(img, dsize=(0, 0),
                          fx=upscaling_factor, fy=upscaling_factor).transpose(2, 0, 1)  # scale up and move the batch axis to be the first
         image = normalize(torch.from_numpy(img)).to(
             device).requires_grad_(True)
+
+    return image
 
 
 def main(image=None, device=None, video=None, config_name="default"):
@@ -124,21 +128,23 @@ def main(image=None, device=None, video=None, config_name="default"):
                 device = "cuda" if torch.cuda.is_available() else "cpu"
             except Exception as e:
                 device = cfg.device
-                
+
         print(f"Running on device {device}")
         model.to(device)
-
-        dream(model=model,
-              image=image,
-              activation=activation,
-              act_wt=cfg.hyperparameters.act_weight,
-              upscaling_factor=cfg.hyperparameters.upscaling_factor,
-              upscaling_steps = cfg.hyperparameters.upscaling_steps,
-              optim_steps=cfg.hyperparameters.optimization_steps,
-              device=device,
-              image_save_path=cfg.path.temp_image_path,
-              gradLayer=gradLayer,
-              neuron_index = cfg.hyperparameters.neuron_index)
+        initial_resolution = get_resolution(image) 
+        final_image = dream(model=model,
+                                 image=image,
+                                 activation=activation,
+                                 act_wt=cfg.hyperparameters.act_weight,
+                                 upscaling_factor=cfg.hyperparameters.upscaling_factor,
+                                 upscaling_steps=cfg.hyperparameters.upscaling_steps,
+                                 optim_steps=cfg.hyperparameters.optimization_steps,
+                                 device=device,
+                                 image_save_path=cfg.path.temp_image_path,
+                                 gradLayer=gradLayer,
+                                 neuron_index=cfg.hyperparameters.neuron_index)
+        
+        final_resolution = get_resolution(final_image)
 
         # converting images to videos
         try:
@@ -146,9 +152,9 @@ def main(image=None, device=None, video=None, config_name="default"):
                 convert_to_video(images_path=cfg.path.temp_image_path,
                                  output_path=cfg.video.output_path,
                                  ext=cfg.video.ext,
-                                 width=cfg.image_dim.height,
-                                 height=cfg.image_dim.width,
-                                 repeat_frames=cfg.video.repeat_frames)
+                                 repeat_frames=cfg.video.repeat_frames,
+                                 initial_resolution = initial_resolution,
+                                 final_resolution=final_resolution)
         except Exception as e:
             print("Error in converting images to videos...")
 

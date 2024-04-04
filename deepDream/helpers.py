@@ -38,30 +38,51 @@ def save_image(image_array, image_name, image_path):
     image = Image.fromarray((image_array * 255).astype(np.uint8))
     image.save(save_path)
 
+def get_resolution(image_tensor):
+    if len(image_tensor.shape) == 3:
+        height, width, _ = image_tensor.shape
+    # Check if the tensor is 2-dimensional (assuming it represents a grayscale image)
+    elif len(image_tensor.shape) == 2:
+        height, width = image_tensor.shape
+    else:
+        raise ValueError("Invalid tensor shape. Expected 2 or 3 dimensions.")
+
+    return (height, width)
+
 
 def convert_to_video(images_path,
                      output_path,
+                     initial_resolution,
+                     final_resolution,
                      ext="png",
-                     width=28,
-                     height=28,
-                     repeat_frames = 10):
+                     repeat_frames = 10,
+                     steps=10,
+                     fps = 10):
     
     print(f"Converting images to video")
-    images = []
-    for f in os.listdir(images_path):
-        if f.endswith(ext):
-            images.append(f)
 
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(output_path, fourcc, 20.0, (width, height))
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter(output_path, fourcc, fps, final_resolution)
 
-    for image in images:
+    resolutions = [(initial_resolution[0] + (final_resolution[0] - initial_resolution[0]) * i // steps,
+                    initial_resolution[1] + (final_resolution[1] - initial_resolution[1]) * i // steps)
+                   for i in range(steps)]
+    
 
-        image_path = os.path.join(images_path, image)
-        frame = cv2.imread(image_path)
+    for res in resolutions:
+        # Iterate through each image file in the folder
+        for image_file in os.listdir(images_path):
 
-        for _ in range(repeat_frames):
-            out.write(frame)
+            image_path = os.path.join(images_path, image_file)
+
+            # Read the image
+            image = cv2.imread(image_path)
+
+            # Resize image to current resolution step
+            resized_image = cv2.resize(image, res)
+
+            # Write the resized image to the video
+            out.write(resized_image)
 
     out.release()
     print("Video saved successfully!")
