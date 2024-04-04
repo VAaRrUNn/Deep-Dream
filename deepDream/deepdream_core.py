@@ -35,7 +35,8 @@ def dream(model,
           upscaling_steps=1,
           optim_steps=20,
           device="cpu",
-          image_save_path=None):
+          image_save_path=None,
+          gradLayer=None):
     model.eval()
     image_index = 0
     for mag_epoch in range(upscaling_steps+1):
@@ -59,14 +60,15 @@ def dream(model,
                 sys.exit()
 
             # image gradients
-            im_grd = grad_loss(image, beta=1, device=device)
+            im_grd = grad_loss(image, gradLayer=gradLayer,
+                               beta=1, device=device)
             # terminate is im_grd is nan
             if torch.isnan(im_grd):
                 print('Error: image gradients were Nan; Terminating ...')
                 sys.exit()
 
             loss = -act_wt*rms + pxl_inty + im_grd
-            
+
             # print activation at the beginning of each mag_epoch
             if opt_epoch == 0:
                 print('begin mag_epoch {}, activation: {}'.format(mag_epoch, rms))
@@ -88,7 +90,7 @@ def dream(model,
             device).requires_grad_(True)
 
 
-def main(image=None, device=None, video=None, config_name = "default"):
+def main(image=None, device=None, video=None, config_name="default"):
     @hydra.main(version_base=None, config_path="../conf", config_name=config_name)
     def _main(cfg):
         activation = {}
@@ -129,7 +131,8 @@ def main(image=None, device=None, video=None, config_name = "default"):
               upscaling_factor=cfg.hyperparameters.upscaling_factor,
               optim_step=cfg.hyperparameters.optimization_steps,
               device=device,
-              image_save_path=cfg.path.temp_image_path)
+              image_save_path=cfg.path.temp_image_path,
+              gradLayer=gradLayer)
 
         # converting images to videos
         if video:
