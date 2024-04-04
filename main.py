@@ -15,7 +15,7 @@ def _main():
     parser.add_argument("--config", type=str, default="default",
                         help="the configuration YAML file. It should be present inside config/")
 
-    parser.add_argument("-i", "--image", action="store_true",
+    parser.add_argument("-i", "--image", type = str, default = None,
                         help="image path to dream on")
 
     args = parser.parse_args()

@@ -40,7 +40,8 @@ def convert_to_video(images_path,
                      output_path,
                      ext="png",
                      width=28,
-                     height=28):
+                     height=28,
+                     repeat_frames = 10):
 
     images = []
     for f in os.listdir(images_path):
@@ -55,7 +56,8 @@ def convert_to_video(images_path,
         image_path = os.path.join(images_path, image)
         frame = cv2.imread(image_path)
 
-        out.write(frame)
+        for a in repeat_frames:
+            out.write(frame)
 
     out.release()
     print("Video saved successfully!")

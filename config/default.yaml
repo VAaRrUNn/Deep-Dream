@@ -12,3 +12,8 @@ image_dim:
 
 path:
   temp_image_path : temp_images
+
+video:
+  repeat_frames: 5
+  ext: png
+  output_path: output.mp4

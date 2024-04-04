@@ -36,7 +36,8 @@ def dream(model,
           optim_steps=20,
           device="cpu",
           image_save_path=None,
-          gradLayer=None):
+          gradLayer=None,
+          neuron_index=11):
     model.eval()
     image_index = 0
     for mag_epoch in range(upscaling_steps+1):
@@ -46,7 +47,7 @@ def dream(model,
             optimizer.zero_grad()
             model(image.unsqueeze(0))
             layer_out = activation['4a']
-            rms = torch.pow((layer_out[0, unit_idx]**2).mean(), 0.5)
+            rms = torch.pow((layer_out[0, neuron_index]**2).mean(), 0.5)
             # terminate if rms is nan
             if torch.isnan(rms):
                 print('Error: rms was Nan; Terminating ...')
@@ -93,6 +94,7 @@ def dream(model,
 def main(image=None, device=None, video=None, config_name="default"):
     @hydra.main(version_base=None, config_path="../conf", config_name=config_name)
     def _main(cfg):
+        nonlocal image, device
         activation = {}
         model = models.googlenet(pretrained=True)
         for param in model.parameters():
@@ -114,9 +116,8 @@ def main(image=None, device=None, video=None, config_name="default"):
                                                      cfg.image_dim.width)))
             im_tensor = normalize(torch.from_numpy(img)).requires_grad_(True)
             img_tensor = im_tensor
-            temp = img_tensor.detach().clone()
-            temp.requires_grad_(True)
-            image = temp
+            image = img_tensor.detach().clone()
+            image.requires_grad_(True)
 
         # change this
         if device == None:
@@ -129,18 +130,20 @@ def main(image=None, device=None, video=None, config_name="default"):
               activation=activation,
               act_wt=cfg.hyperparameters.act_weight,
               upscaling_factor=cfg.hyperparameters.upscaling_factor,
-              optim_step=cfg.hyperparameters.optimization_steps,
+              optim_steps=cfg.hyperparameters.optimization_steps,
               device=device,
               image_save_path=cfg.path.temp_image_path,
-              gradLayer=gradLayer)
+              gradLayer=gradLayer,
+              neuron_index = cfg.hyperparameters.neuron_index)
 
         # converting images to videos
         if video:
             convert_to_video(images_path=cfg.path.temp_image_path,
-                             output_path='output.mp4',
-                             ext="png",
+                             output_path=cfg.video.output_path,
+                             ext=cfg.video.ext,
                              width=cfg.image_dim.height,
-                             height=cfg.image_dim.width)
+                             height=cfg.image_dim.width,
+                             repeat_frames=cfg.video.repeat_frames)
 
     _main()
 
