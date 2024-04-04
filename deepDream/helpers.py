@@ -32,7 +32,10 @@ def image_converter(im):
 def save_image(image_array, image_name, image_path):
     save_path = Path(image_path) / Path(image_name)
 
-    image = Image.fromarray(image_array)
+    if not os.path.exists(image_path):
+        os.makedirs(image_path)
+
+    image = Image.fromarray((image_array * 255).astype(np.uint8))
     image.save(save_path)
 
 
@@ -56,7 +59,7 @@ def convert_to_video(images_path,
         image_path = os.path.join(images_path, image)
         frame = cv2.imread(image_path)
 
-        for a in repeat_frames:
+        for _ in range(repeat_frames):
             out.write(frame)
 
     out.release()

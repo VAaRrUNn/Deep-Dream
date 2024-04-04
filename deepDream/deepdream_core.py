@@ -92,7 +92,7 @@ def dream(model,
 
 
 def main(image=None, device=None, video=None, config_name="default"):
-    @hydra.main(version_base=None, config_path="../conf", config_name=config_name)
+    @hydra.main(version_base=None, config_path="../config", config_name=config_name)
     def _main(cfg):
         nonlocal image, device
         activation = {}
@@ -121,7 +121,11 @@ def main(image=None, device=None, video=None, config_name="default"):
 
         # change this
         if device == None:
-            device = cfg.device
+            try:
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+            except Exception as e:
+                device = cfg.device
+                print(f"Defaulting device to {device}")
 
         model.to(device)
 
@@ -130,6 +134,7 @@ def main(image=None, device=None, video=None, config_name="default"):
               activation=activation,
               act_wt=cfg.hyperparameters.act_weight,
               upscaling_factor=cfg.hyperparameters.upscaling_factor,
+              upscaling_steps = cfg.hyperparameters.upscaling_steps,
               optim_steps=cfg.hyperparameters.optimization_steps,
               device=device,
               image_save_path=cfg.path.temp_image_path,
@@ -137,13 +142,16 @@ def main(image=None, device=None, video=None, config_name="default"):
               neuron_index = cfg.hyperparameters.neuron_index)
 
         # converting images to videos
-        if video:
-            convert_to_video(images_path=cfg.path.temp_image_path,
-                             output_path=cfg.video.output_path,
-                             ext=cfg.video.ext,
-                             width=cfg.image_dim.height,
-                             height=cfg.image_dim.width,
-                             repeat_frames=cfg.video.repeat_frames)
+        try:
+            if video:
+                convert_to_video(images_path=cfg.path.temp_image_path,
+                                 output_path=cfg.video.output_path,
+                                 ext=cfg.video.ext,
+                                 width=cfg.image_dim.height,
+                                 height=cfg.image_dim.width,
+                                 repeat_frames=cfg.video.repeat_frames)
+        except Exception as e:
+            print("Error in converting images to videos...")
 
     _main()
 

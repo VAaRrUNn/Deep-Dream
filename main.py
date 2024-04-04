@@ -1,4 +1,4 @@
-from deepDream.deepdream_core import main
+# from deepDream.deepdream_core import main
 import argparse
 
 
@@ -6,7 +6,7 @@ def _main():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("device", type=str, default="cpu",
+    parser.add_argument("--device", type=str, default="cpu",
                         help="device to perform the computation on")
 
     parser.add_argument("--video", action="store_true",
@@ -19,11 +19,11 @@ def _main():
                         help="image path to dream on")
 
     args = parser.parse_args()
-
-    main(image=args.image,
-         device=args.device,
-         video=args.video,
-         config_name=args.config_name)
+    print(args)
+    # main(image=args.image,
+    #      device=args.device,
+    #      video=args.video,
+    #      config_name=args.config)
 
 
 if __name__ == "__main__":

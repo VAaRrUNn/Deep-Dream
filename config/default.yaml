@@ -2,6 +2,7 @@ hyperparameters:
   neuron_index: 11
   act_weight: 0.5
   upscaling_factor: 1.5
+  upscaling_steps: 10
   optimization_steps: 30
 
 device: cpu
