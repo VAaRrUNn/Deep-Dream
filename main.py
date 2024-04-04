@@ -1,4 +1,4 @@
-# from deepDream.deepdream_core import main
+from deepDream.deepdream_core import main
 import argparse
 
 
@@ -20,10 +20,10 @@ def _main():
 
     args = parser.parse_args()
     print(args)
-    # main(image=args.image,
-    #      device=args.device,
-    #      video=args.video,
-    #      config_name=args.config)
+    main(image=args.image,
+         device=args.device,
+         video=args.video,
+         config_name=args.config)
 
 
 if __name__ == "__main__":
