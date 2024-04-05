@@ -5,9 +5,10 @@ from torchvision import models
 import sys
 import cv2
 import hydra
+from PIL import Image
 
 from deepDream.gradients import RGBgradients
-from deepDream.helpers import image_converter, normalize, denormalize, save_image, convert_to_video, get_resolution
+from deepDream.helpers import image_converter, normalize, denormalize, save_image, convert_to_video, get_resolution, resize_image
 
 
 def create_hook(name, activation):
@@ -38,9 +39,9 @@ def dream(model,
           image_save_path=None,
           gradLayer=None,
           neuron_index=11):
+    print("Starting dreaming...")
     model.eval()
     image_index = 0
-    final_resolution = ()
     for mag_epoch in range(upscaling_steps+1):
         optimizer = torch.optim.Adam(params=[image], lr=0.4)
         image = image.to(device)
@@ -48,6 +49,7 @@ def dream(model,
         for opt_epoch in range(optim_steps):
             optimizer.zero_grad()
             model(image.unsqueeze(0))
+            print("passed ;;")
             layer_out = activation['4a']
             rms = torch.pow((layer_out[0, neuron_index]**2).mean(), 0.5)
             # terminate if rms is nan
@@ -94,8 +96,9 @@ def dream(model,
     return image
 
 
-def main(image=None, device=None, video=None, config_name="default"):
-    @hydra.main(version_base=None, config_path="../config", config_name=config_name)
+def main_fn(image=None, device=None, video=None, config_name="default"):
+    # this is messing with the argparser from main.py file so instead loading manually
+    # @hydra.main(version_base=None, config_path="../config", config_name=config_name, allow_unknown_args = True)
     def _main(cfg):
         nonlocal image, device
         activation = {}
@@ -114,6 +117,21 @@ def main(image=None, device=None, video=None, config_name="default"):
 
         gradLayer = RGBgradients(grad_filters)
 
+        if image != None:
+            try:
+                pil_image = Image.open(image)
+                np_image = np.array(pil_image)
+                # np_image = resize_image(np_image, 28, 28)
+                image = torch.from_numpy(np_image)
+                image = image.to(torch.float32)
+                image = torch.permute(image, (2, 0, 1))
+                image = normalize(image)
+                image.requires_grad_(True)
+            except Exception as e:
+                print(f"Error loading: {image}")
+                image = None
+                sys.exit()
+
         if image == None:
             img = np.single(np.random.uniform(0, 1, (3, cfg.image_dim.height,
                                                      cfg.image_dim.width)))
@@ -129,19 +147,19 @@ def main(image=None, device=None, video=None, config_name="default"):
 
         print(f"Running on device {device}")
         model.to(device)
-        initial_resolution = get_resolution(image) 
+        initial_resolution = get_resolution(image)
         final_image = dream(model=model,
-                                 image=image,
-                                 activation=activation,
-                                 act_wt=cfg.hyperparameters.act_weight,
-                                 upscaling_factor=cfg.hyperparameters.upscaling_factor,
-                                 upscaling_steps=cfg.hyperparameters.upscaling_steps,
-                                 optim_steps=cfg.hyperparameters.optimization_steps,
-                                 device=device,
-                                 image_save_path=cfg.path.temp_image_path,
-                                 gradLayer=gradLayer,
-                                 neuron_index=cfg.hyperparameters.neuron_index)
-        
+                            image=image,
+                            activation=activation,
+                            act_wt=cfg.hyperparameters.act_weight,
+                            upscaling_factor=cfg.hyperparameters.upscaling_factor,
+                            upscaling_steps=cfg.hyperparameters.upscaling_steps,
+                            optim_steps=cfg.hyperparameters.optimization_steps,
+                            device=device,
+                            image_save_path=cfg.path.temp_image_path,
+                            gradLayer=gradLayer,
+                            neuron_index=cfg.hyperparameters.neuron_index)
+
         final_resolution = get_resolution(final_image)
 
         # converting images to videos
@@ -151,12 +169,14 @@ def main(image=None, device=None, video=None, config_name="default"):
                                  output_path=cfg.video.output_path,
                                  ext=cfg.video.ext,
                                  repeat_frames=cfg.video.repeat_frames,
-                                 initial_resolution = initial_resolution,
+                                 initial_resolution=initial_resolution,
                                  final_resolution=final_resolution)
         except Exception as e:
             print("Error in converting images to videos...")
 
-    _main()
+    with hydra.initialize(version_base=None, config_path="../config", job_name="deepdream"):
+        cfg = hydra.compose(config_name="default")
+    _main(cfg)
 
 
 if __name__ == "__main__":

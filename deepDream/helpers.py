@@ -50,6 +50,13 @@ def get_resolution(image_tensor):
     return (height, width)
 
 
+def resize_image(image, width, height):
+    # image = image.detach().cpu().numpy()
+    image = cv2.resize(image, (width, height))
+
+    return image
+
+
 def convert_to_video(images_path,
                      output_path,
                      initial_resolution,
