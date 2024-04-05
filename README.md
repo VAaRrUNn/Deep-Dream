@@ -5,7 +5,12 @@ The objective of this repo is to make visualization easy by providing easy-to-us
 This repo is WIP.
 Here's a video of generated images.
 
-https://github.com/VAaRrUNn/Deep-Dream/assets/75053810/7f52b39d-e692-4940-b4bb-d877680e8bae
+
+
+https://github.com/VAaRrUNn/Deep-Dream/assets/75053810/ec66bb02-02f7-4205-af8f-5c2397f75306
+
+Alternatively, you can download the video from [assets folder](https://github.com/VAaRrUNn/Deep-Dream/tree/main/assets)
+
 
 ## Usage.
 ### Clone the repo:
