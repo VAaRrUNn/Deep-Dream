@@ -47,9 +47,9 @@ def dream(model,
         image = image.to(device)
 
         for opt_epoch in range(optim_steps):
+            print(";")
             optimizer.zero_grad()
             model(image.unsqueeze(0))
-            print("passed ;;")
             layer_out = activation['4a']
             rms = torch.pow((layer_out[0, neuron_index]**2).mean(), 0.5)
             # terminate if rms is nan
@@ -78,20 +78,21 @@ def dream(model,
             loss.backward()
             optimizer.step()
 
-            img = image_converter(image)
+            np_img = image_converter(image)
             image_index += 1
             image_name = str(image_index) + ".png"
-
             # saving the image in a temperory folder
-            save_image(image_array=img,
+            save_image(image_array=np_img,
                        image_name=image_name,
                        image_path=image_save_path)
+            
 
         print(f"Done: {mag_epoch}/{upscaling_steps}")
-        img = cv2.resize(img, dsize=(0, 0),
+        np_img = cv2.resize(np_img, dsize=(0, 0),
                          fx=upscaling_factor, fy=upscaling_factor).transpose(2, 0, 1)  # scale up and move the batch axis to be the first
-        image = normalize(torch.from_numpy(img)).to(
+        image = normalize(torch.from_numpy(np_img).type(torch.float32)).to(
             device).requires_grad_(True)
+
 
     return image
 
@@ -180,4 +181,4 @@ def main_fn(image=None, device=None, video=None, config_name="default"):
 
 
 if __name__ == "__main__":
-    main()
+    main_fn()

@@ -10,8 +10,8 @@ def _main():
                         help="device to perform the computation on")
 
     # some issues in colab
-    # parser.add_argument("--video", action="store_true",
-    #                     help="convert the generated images to video")
+    parser.add_argument("--video", action="store_true",
+                        help="convert the generated images to video")
 
     parser.add_argument("--config", type=str, default="default",
                         help="the configuration YAML file. It should be present inside config/")
@@ -22,8 +22,9 @@ def _main():
     args = parser.parse_args()
     image = args.image 
     device = args.device
-    video = True
+    video = args.video
     config_name = args.config
+    print(image)
     print(type(image))
     main_fn(image, 
             device, 
