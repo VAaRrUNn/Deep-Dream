@@ -18,11 +18,8 @@ denormalize = transforms.Normalize(
 def image_converter(im):
     im_copy = im.clone().detach().cpu()
     im_copy = denormalize(im_copy).type(torch.uint8).permute(1, 2, 0).numpy()
-    print(im_copy.shape)
-    print(im_copy[0][0])
-    # clip negative values as plt.imshow() only accepts
-    # floating values in range [0,1] and integers in range [0,255]
-    # im_copy = im_copy.clip(0, 1)
+ 
+
     return im_copy
 
 
@@ -32,16 +29,13 @@ def save_image(image_array, image_name, image_path):
     if not os.path.exists(image_path):
         os.makedirs(image_path)
 
-    print("going for conversion")
+
 
     image = Image.fromarray(image_array)
-    print("after")
-    # print(image[0][0])
-    print(image)
+
 
     # image = Image.fromarray((image_array * 255).astype(np.uint8))
     image.save(save_path)
-    print("fdone")
 
 def get_resolution(image_tensor):
     if len(image_tensor.shape) == 3:
