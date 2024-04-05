@@ -8,7 +8,7 @@ import hydra
 from PIL import Image
 
 from deepDream.gradients import RGBgradients
-from deepDream.helpers import image_converter, normalize, denormalize, save_image, convert_to_video, get_resolution, resize_image
+from deepDream.helpers import image_converter, normalize, denormalize, save_image, convert_to_video, get_resolution, resize_image, delete_folder
 
 
 def create_hook(name, activation):
@@ -89,7 +89,7 @@ def dream(model,
 
         print(f"Done: {mag_epoch}/{upscaling_steps}")
         np_img = cv2.resize(np_img, dsize=(0, 0),
-                         fx=upscaling_factor, fy=upscaling_factor).transpose(2, 0, 1)  # scale up and move the batch axis to be the first
+                         fx=upscaling_factor, fy=upscaling_factor).transpose(2, 0, 1)  
         image = normalize(torch.from_numpy(np_img).type(torch.float32)).to(
             device).requires_grad_(True)
 
@@ -97,7 +97,7 @@ def dream(model,
     return image
 
 
-def main_fn(image=None, device=None, video=None, config_name="default"):
+def main_fn(keep_folder = True, image=None, device=None, video=None, config_name="default"):
     # this is messing with the argparser from main.py file so instead loading manually
     # @hydra.main(version_base=None, config_path="../config", config_name=config_name, allow_unknown_args = True)
     def _main(cfg):
@@ -174,6 +174,10 @@ def main_fn(image=None, device=None, video=None, config_name="default"):
                                  final_resolution=final_resolution)
         except Exception as e:
             print("Error in converting images to videos...")
+        
+        if not keep_folder:
+            delete_folder(cfg.path.temp_image_path)
+
 
     with hydra.initialize(version_base=None, config_path="../config", job_name="deepdream"):
         cfg = hydra.compose(config_name="default")

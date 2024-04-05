@@ -19,21 +19,15 @@ def _main():
     parser.add_argument("--image", type = str, default = None,
                         help="image path to dream on")
     
+    parser.add_argument("--keep_folder", action="store_false",
+                        help = "specifies to keep the image folder or not.")
+    
     args = parser.parse_args()
-    image = args.image 
-    device = args.device
-    video = args.video
-    config_name = args.config
-    print(image)
-    print(type(image))
-    main_fn(image, 
-            device, 
-            video,
-            config_name)
-    # main_fn(image=args.image,
-    #      device=args.device,
-    #      video=True,
-    #      config_name=args.config)
+    main_fn(image=args.image,
+         device=args.device,
+         video=args.video,
+         config_name=args.config,
+         keep_folder= args.keep_folder)
 
 
 if __name__ == "__main__":

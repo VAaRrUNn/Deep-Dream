@@ -6,6 +6,7 @@ import cv2
 import os
 import re
 import torch
+import shutil
 
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
@@ -59,6 +60,10 @@ def resize_image(image, width, height):
     image = cv2.resize(image, (width, height))
 
     return image
+
+
+def delete_folder(folder_path):
+    shutil.rmtree(folder_path)
 
 # def image_converter(im):
 #     im_copy = im.cpu()
